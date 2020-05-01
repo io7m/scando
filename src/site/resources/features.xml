@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<div xmlns="http://www.w3.org/1999/xhtml">
+  <ul>
+    <li>Simple command-line tool for checking jar version changes.</li>
+    <li>Powered by <a href="https://github.com/siom79/japicmp">japicmp</a>.</li>
+    <li>ISC license</li>
+  </ul>
+</div>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.io7m.primogenitor</groupId>
+    <artifactId>com.io7m.primogenitor.full</artifactId>
+    <version>5.0.0</version>
+  </parent>
+
+  <groupId>com.io7m.scando</groupId>
+  <artifactId>com.io7m.scando</artifactId>
+  <version>0.0.1</version>
+
+  <description>Ultra-minimalist semantic versioning checker</description>
+  <name>com.io7m.scando</name>
+  <url>https://www.github.com/io7m/scando</url>
+
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>com.io7m.scando.cmdline</module>
+  </modules>
+
+  <properties>
+    <com.codacy.id>866728723fb94b649612e24b68226ac1</com.codacy.id>
+    <com.io7m.xstructural.version>0.0.1-SNAPSHOT</com.io7m.xstructural.version>
+    <io7m.java.targetJavaVersion>8</io7m.java.targetJavaVersion>
+    <io7m.api.previousVersion>0.0.1-SNAPSHOT</io7m.api.previousVersion>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.beust</groupId>
+        <artifactId>jcommander</artifactId>
+        <version>1.78</version>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.annotation.bundle</artifactId>
+        <version>1.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.annotation.versioning</artifactId>
+        <version>1.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.siom79.japicmp</groupId>
+        <artifactId>japicmp</artifactId>
+        <version>0.14.3</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <!-- Generate a site -->
+      <plugin>
+        <groupId>com.io7m.minisite</groupId>
+        <artifactId>com.io7m.minisite.maven_plugin</artifactId>
+        <inherited>false</inherited>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

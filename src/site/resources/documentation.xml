@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<div xmlns="http://www.w3.org/1999/xhtml">
+  <h3>User documentation</h3>
+<pre><![CDATA[
+$ java -jar \
+  com.io7m.scando.cmdline-0.0.1-main.jar \
+  --oldJar io7m-jtensors-core-7.1.0.jar \
+  --newJar com.io7m.jtensors.core-9.0.0.jar \
+  --oldJarVersion 7.1.0 \
+  --newJarVersion 7.2.0 \
+  --textReport report.txt \
+  --htmlReport report.html
+INFO: Text report written to report.txt
+INFO: HTML report written to report.html
+ERROR: Version change between 7.1.0 and 7.2.0 is MINOR, but the changes made to code require a MAJOR version change
+
+$ echo $?
+1
+]]></pre>
+</div>
