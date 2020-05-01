@@ -37,6 +37,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class Main
 {
@@ -51,6 +53,13 @@ public final class Main
     {
 
     }
+
+    @Parameter(
+      names = "--help",
+      description = "Display this help message",
+      help = true
+    )
+    private boolean help;
 
     @Parameter(
       names = "--oldJar",
@@ -93,6 +102,13 @@ public final class Main
       required = true
     )
     private Path htmlReport;
+
+    @Parameter(
+      names = "--excludeList",
+      description = "A file containing a list of package/class exclusions",
+      required = false
+    )
+    private Path excludeList;
   }
 
   private static SemanticVersion semanticVersionOf(
@@ -113,30 +129,38 @@ public final class Main
     throws Exception
   {
     final Parameters parameters = new Parameters();
-    JCommander.newBuilder()
-      .programName("scando")
-      .addObject(parameters)
-      .build()
-      .parse(args);
+    try {
+      final JCommander commander =
+        JCommander.newBuilder()
+          .programName("scando")
+          .addObject(parameters)
+          .build();
+
+      commander.parse(args);
+
+      if (parameters.help) {
+        commander.usage();
+        System.exit(0);
+      }
+
+    } catch (final Exception e) {
+      System.err.println("ERROR: " + e.getMessage());
+      System.err.println("INFO: Try --help for usage information");
+      System.exit(1);
+    }
 
     parameters.newJarPath = parameters.newJarPath.toAbsolutePath();
     parameters.oldJarPath = parameters.oldJarPath.toAbsolutePath();
     parameters.htmlReport = parameters.htmlReport.toAbsolutePath();
     parameters.textReport = parameters.textReport.toAbsolutePath();
+    if (parameters.excludeList != null) {
+      parameters.excludeList = parameters.excludeList.toAbsolutePath();
+    }
 
     final SemanticVersion newJarVersionValue =
       semanticVersionOf(new Version(parameters.newJarVersion));
     final SemanticVersion oldJarVersionValue =
       semanticVersionOf(new Version(parameters.oldJarVersion));
-
-    final JarArchiveComparatorOptions comparatorOptions =
-      new JarArchiveComparatorOptions();
-    comparatorOptions.getIgnoreMissingClasses()
-      .setIgnoreAllMissingClasses(true);
-    comparatorOptions.setNoAnnotations(true);
-
-    final JarArchiveComparator jarArchiveComparator =
-      new JarArchiveComparator(comparatorOptions);
 
     final JApiCmpArchive oldArchives =
       new JApiCmpArchive(
@@ -149,10 +173,35 @@ public final class Main
         newJarVersionValue.toString()
       );
 
+    final Options options = Options.newDefault();
+    options.getIgnoreMissingClasses().setIgnoreAllMissingClasses(true);
+    options.setOutputOnlyModifications(true);
+    options.setNoAnnotations(true);
+    options.setOldArchives(Collections.singletonList(oldArchives));
+    options.setHtmlOutputFile(Optional.of(parameters.htmlReport.toString()));
+    options.setNewArchives(Collections.singletonList(newArchives));
+
+    if (parameters.excludeList != null) {
+      try (Stream<String> lineStream = Files.lines(parameters.excludeList)) {
+        final List<String> lines = lineStream.collect(Collectors.toList());
+        for (final String line : lines) {
+          final String lineTrimmed = line.trim();
+          if (lineTrimmed.isEmpty()) {
+            continue;
+          }
+          options.addExcludeFromArgument(Optional.of(lineTrimmed), true);
+        }
+      }
+    }
+
+    final JarArchiveComparatorOptions comparatorOptions =
+      JarArchiveComparatorOptions.of(options);
+    final JarArchiveComparator jarArchiveComparator =
+      new JarArchiveComparator(comparatorOptions);
     final List<JApiClass> jApiClasses =
       jarArchiveComparator.compare(oldArchives, newArchives);
 
-    writeReports(jApiClasses, parameters, oldArchives, newArchives);
+    writeReports(options, jApiClasses, parameters, oldArchives, newArchives);
 
     System.exit(
       runSemanticVersionCheck(
@@ -184,12 +233,14 @@ public final class Main
     if (oldJarVersionValue.getMajor() > 0 || newJarVersionValue.getMajor() > 0) {
       if (requiredChange.getRank() > givenChange.getRank()) {
         System.err.println(String.format(
-          "ERROR: The version change between %s and %s is %s, but the changes made to the code require a %s version change",
+          "ERROR: The version change between %s and %s is %s, "
+            + "but the changes made to the code require a %s version change",
           oldJarVersionValue,
           newJarVersionValue,
           givenChange,
           requiredChange
         ));
+        System.err.flush();
         return 1;
       }
     }
@@ -197,19 +248,13 @@ public final class Main
   }
 
   private static void writeReports(
+    final Options options,
     final List<JApiClass> jApiClasses,
     final Parameters parameters,
     final JApiCmpArchive oldArchives,
     final JApiCmpArchive newArchives)
     throws Exception
   {
-    final Options options = Options.newDefault();
-    options.getIgnoreMissingClasses().setIgnoreAllMissingClasses(true);
-    options.setOutputOnlyModifications(true);
-    options.setOldArchives(Collections.singletonList(oldArchives));
-    options.setHtmlOutputFile(Optional.of(parameters.htmlReport.toString()));
-    options.setNewArchives(Collections.singletonList(newArchives));
-
     try (BufferedWriter outputStream =
            Files.newBufferedWriter(parameters.textReport)) {
       final StdoutOutputGenerator stdoutOutputGenerator =
@@ -225,6 +270,7 @@ public final class Main
       outputStream.newLine();
       outputStream.newLine();
       outputStream.write(stdoutOutputGenerator.generate());
+      outputStream.flush();
     }
 
     final XmlOutputGeneratorOptions xmlOptions =
@@ -238,5 +284,6 @@ public final class Main
 
     System.err.println("INFO: Text report written to " + parameters.textReport);
     System.err.println("INFO: HTML report written to " + parameters.htmlReport);
+    System.err.flush();
   }
 }
