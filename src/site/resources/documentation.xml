@@ -38,6 +38,8 @@ $ echo $?
 1
 ]]></pre>
   <p>
-    See <a href="https://siom79.github.io/japicmp/CliTool.html">japicmp</a> for the syntax of excludes.
+    The <tt>--excludeList</tt> parameter, if specified, gives the path of a file containing one exclude
+    pattern per line. Empty lines, and lines starting with <tt>#</tt> are ignored.
+    See <a href="https://siom79.github.io/japicmp/CliTool.html">japicmp</a> for the syntax of exclude patterns.
   </p>
 </div>

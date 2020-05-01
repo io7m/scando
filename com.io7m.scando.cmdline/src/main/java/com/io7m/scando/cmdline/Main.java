@@ -189,6 +189,9 @@ public final class Main
           if (lineTrimmed.isEmpty()) {
             continue;
           }
+          if (lineTrimmed.startsWith("#")) {
+            continue;
+          }
           options.addExcludeFromArgument(Optional.of(lineTrimmed), true);
         }
       }
