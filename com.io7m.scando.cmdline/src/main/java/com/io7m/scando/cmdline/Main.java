@@ -184,7 +184,7 @@ public final class Main
     if (oldJarVersionValue.getMajor() > 0 || newJarVersionValue.getMajor() > 0) {
       if (requiredChange.getRank() > givenChange.getRank()) {
         System.err.println(String.format(
-          "ERROR: Version change between %s and %s is %s, but the changes made to code require a %s version change",
+          "ERROR: The version change between %s and %s is %s, but the changes made to the code require a %s version change",
           oldJarVersionValue,
           newJarVersionValue,
           givenChange,
