@@ -19,6 +19,8 @@
   </p>
 
   <p>
-    The <tt>scando</tt> package implements a jar version checker.
+    The <tt>scando</tt> package implements a jar version checker. It essentially provides a wrapper around the
+    <a href="https://siom79.github.io/japicmp">japicmp</a> API that does one thing: Checks to see if you have
+    incremented version numbers in accordance with <a href="https://www.semver.org">semantic versioning</a> rules.
   </p>
 </div>

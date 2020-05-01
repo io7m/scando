@@ -3,6 +3,25 @@
 <div xmlns="http://www.w3.org/1999/xhtml">
   <h3>User documentation</h3>
 <pre><![CDATA[
+Usage: scando [options]
+  Options:
+    --excludeList
+      A file containing a list of package/class exclusions
+    --help
+      Display this help message
+  * --htmlReport
+      The output file for the HTML report
+  * --newJar
+      The new jar file
+  * --newJarVersion
+      The new jar version
+  * --oldJar
+      The old jar file
+  * --oldJarVersion
+      The old jar version
+  * --textReport
+      The output file for the plain text report
+
 $ java -jar \
   com.io7m.scando.cmdline-0.0.1-main.jar \
   --oldJar io7m-jtensors-core-7.1.0.jar \
@@ -18,4 +37,7 @@ ERROR: Version change between 7.1.0 and 7.2.0 is MINOR, but the changes made to 
 $ echo $?
 1
 ]]></pre>
+  <p>
+    See <a href="https://siom79.github.io/japicmp/CliTool.html">japicmp</a> for the syntax of excludes.
+  </p>
 </div>
