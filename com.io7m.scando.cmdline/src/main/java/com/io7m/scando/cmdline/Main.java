@@ -31,14 +31,27 @@ import japicmp.output.xml.XmlOutputGeneratorOptions;
 import japicmp.util.Optional;
 import japicmp.versioning.SemanticVersion;
 import japicmp.versioning.Version;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public final class Main
 {
@@ -63,28 +76,28 @@ public final class Main
 
     @Parameter(
       names = "--oldJar",
-      description = "The old jar file",
+      description = "The old jar/aar file",
       required = true
     )
     private Path oldJarPath;
 
     @Parameter(
       names = "--oldJarVersion",
-      description = "The old jar version",
+      description = "The old jar/aar version",
       required = true
     )
     private String oldJarVersion;
 
     @Parameter(
       names = "--newJar",
-      description = "The new jar file",
+      description = "The new jar/aar file",
       required = true
     )
     private Path newJarPath;
 
     @Parameter(
       names = "--newJarVersion",
-      description = "The new jar version",
+      description = "The new jar/aar version",
       required = true
     )
     private String newJarVersion;
@@ -124,7 +137,7 @@ public final class Main
     );
   }
 
-  public static void main(
+  public static int mainExitless(
     final String[] args)
     throws Exception
   {
@@ -140,13 +153,13 @@ public final class Main
 
       if (parameters.help) {
         commander.usage();
-        System.exit(0);
+        return 0;
       }
 
     } catch (final Exception e) {
       System.err.println("ERROR: " + e.getMessage());
       System.err.println("INFO: Try --help for usage information");
-      System.exit(1);
+      return 1;
     }
 
     parameters.newJarPath = parameters.newJarPath.toAbsolutePath();
@@ -162,14 +175,33 @@ public final class Main
     final SemanticVersion oldJarVersionValue =
       semanticVersionOf(new Version(parameters.oldJarVersion));
 
+    if (hashOf(parameters.oldJarPath).equals(hashOf(parameters.newJarPath))) {
+      System.err.println("INFO: The input files are identical; any version number change is acceptable");
+      return 0;
+    }
+
+    final File oldTargetFile;
+    if (parameters.oldJarPath.toString().endsWith(".aar")) {
+      oldTargetFile = unpackAAR(parameters.oldJarPath);
+    } else {
+      oldTargetFile = parameters.oldJarPath.toFile();
+    }
+
+    final File newTargetFile;
+    if (parameters.newJarPath.toString().endsWith(".aar")) {
+      newTargetFile = unpackAAR(parameters.newJarPath);
+    } else {
+      newTargetFile = parameters.newJarPath.toFile();
+    }
+
     final JApiCmpArchive oldArchives =
       new JApiCmpArchive(
-        parameters.oldJarPath.toFile(),
+        oldTargetFile,
         oldJarVersionValue.toString()
       );
     final JApiCmpArchive newArchives =
       new JApiCmpArchive(
-        parameters.newJarPath.toFile(),
+        newTargetFile,
         newJarVersionValue.toString()
       );
 
@@ -182,19 +214,7 @@ public final class Main
     options.setNewArchives(Collections.singletonList(newArchives));
 
     if (parameters.excludeList != null) {
-      try (Stream<String> lineStream = Files.lines(parameters.excludeList)) {
-        final List<String> lines = lineStream.collect(Collectors.toList());
-        for (final String line : lines) {
-          final String lineTrimmed = line.trim();
-          if (lineTrimmed.isEmpty()) {
-            continue;
-          }
-          if (lineTrimmed.startsWith("#")) {
-            continue;
-          }
-          options.addExcludeFromArgument(Optional.of(lineTrimmed), true);
-        }
-      }
+      loadExcludeList(parameters, options);
     }
 
     final JarArchiveComparatorOptions comparatorOptions =
@@ -206,13 +226,84 @@ public final class Main
 
     writeReports(options, jApiClasses, parameters, oldArchives, newArchives);
 
-    System.exit(
-      runSemanticVersionCheck(
-        jApiClasses,
-        newJarVersionValue,
-        oldJarVersionValue
-      )
+    return runSemanticVersionCheck(
+      jApiClasses,
+      newJarVersionValue,
+      oldJarVersionValue
     );
+  }
+
+  private static String hashOf(final Path path)
+    throws IOException, NoSuchAlgorithmException
+  {
+    final MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    try (InputStream stream = Files.newInputStream(path)) {
+      final byte[] buffer = new byte[4096];
+      while (true) {
+        final int r = stream.read(buffer);
+        if (r == -1) {
+          break;
+        }
+        digest.update(buffer, 0, r);
+      }
+    }
+    return Hex.encodeHexString(digest.digest());
+  }
+
+  public static void main(
+    final String[] args)
+    throws Exception
+  {
+    System.exit(mainExitless(args));
+  }
+
+  private static void loadExcludeList(
+    final Parameters parameters,
+    final Options options)
+    throws IOException
+  {
+    try (Stream<String> lineStream = Files.lines(parameters.excludeList)) {
+      final List<String> lines = lineStream.collect(Collectors.toList());
+      for (final String line : lines) {
+        final String lineTrimmed = line.trim();
+        if (lineTrimmed.isEmpty()) {
+          continue;
+        }
+        if (lineTrimmed.startsWith("#")) {
+          continue;
+        }
+        options.addExcludeFromArgument(Optional.of(lineTrimmed), true);
+      }
+    }
+  }
+
+  private static File unpackAAR(
+    final Path original)
+    throws IOException
+  {
+    final String filenameWithoutExtension =
+      FilenameUtils.removeExtension(original.toString());
+    final String newFilename =
+      String.format("%s.jar", filenameWithoutExtension);
+    final String newFilenameTmp =
+      String.format("%s.jar.tmp", filenameWithoutExtension);
+    final FileSystem fileSystem =
+      original.getFileSystem();
+    final Path output =
+      fileSystem.getPath(newFilename);
+    final Path outputTmp =
+      fileSystem.getPath(newFilenameTmp);
+
+    System.err.printf("INFO: Unpacking %s -> %s%n", original, newFilename);
+
+    try (ZipFile file = new ZipFile(original.toFile())) {
+      final ZipEntry entry = file.getEntry("classes.jar");
+      try (InputStream stream = file.getInputStream(entry)) {
+        Files.copy(stream, outputTmp);
+        Files.move(outputTmp, output, REPLACE_EXISTING, ATOMIC_MOVE);
+      }
+    }
+    return output.toFile();
   }
 
   private static int runSemanticVersionCheck(
