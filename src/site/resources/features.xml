@@ -3,7 +3,10 @@
 <div xmlns="http://www.w3.org/1999/xhtml">
   <ul>
     <li>Simple command-line tool for checking jar version changes.</li>
+    <li>Compare <tt>jar</tt> files for semantic versioning conformance.</li>
+    <li>Compare Android <tt>aar</tt> files for semantic versioning conformance.</li>
     <li>Powered by <a href="https://github.com/siom79/japicmp">japicmp</a>.</li>
+    <li>High-coverage automated test suite.</li>
     <li>ISC license</li>
   </ul>
 </div>
