@@ -131,6 +131,9 @@ public final class MainTest
   public void nonexistentJarsFail2()
     throws Exception
   {
+    final Path newJar =
+      this.resourceOf("io7m-jtensors-core-7.1.0.jar");
+
     final IOException ex = assertThrows(IOException.class, () -> {
       Main.mainExitless(new String[]{
         "--oldJarUri",
@@ -138,7 +141,7 @@ public final class MainTest
         "--oldJarVersion",
         "7.1.0",
         "--newJar",
-        "https://repo1.maven.org/maven2/com/io7m/jtensors/com.io7m.jtensors.core/9.0.0/com.io7m.jtensors.core-9.0.0.jar",
+        newJar.toString(),
         "--newJarVersion",
         "9.0.0",
         "--textReport",
@@ -155,6 +158,9 @@ public final class MainTest
   public void nonexistentJarsIgnored()
     throws Exception
   {
+    final Path newJar =
+      this.resourceOf("io7m-jtensors-core-7.1.0.jar");
+
     Main.mainExitless(new String[]{
       "--ignoreMissingOld",
       "--oldJarUri",
@@ -162,7 +168,7 @@ public final class MainTest
       "--oldJarVersion",
       "7.1.0",
       "--newJar",
-      "https://repo1.maven.org/maven2/com/io7m/jtensors/com.io7m.jtensors.core/9.0.0/com.io7m.jtensors.core-9.0.0.jar",
+      newJar.toString(),
       "--newJarVersion",
       "9.0.0",
       "--textReport",

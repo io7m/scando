@@ -155,14 +155,6 @@ public final class Main
     );
   }
 
-  private static final class FinishedEarly extends Exception
-  {
-    FinishedEarly()
-    {
-
-    }
-  }
-
   public static int mainExitless(
     final String[] args)
     throws Exception
@@ -195,86 +187,82 @@ public final class Main
     final Parameters parameters)
     throws Exception
   {
-    try {
-      parameters.oldJarPath = copyFromURI(parameters);
-      parameters.newJarPath = parameters.newJarPath.toAbsolutePath();
-      parameters.oldJarPath = parameters.oldJarPath.toAbsolutePath();
-      parameters.htmlReport = parameters.htmlReport.toAbsolutePath();
-      parameters.textReport = parameters.textReport.toAbsolutePath();
-      if (parameters.excludeList != null) {
-        parameters.excludeList = parameters.excludeList.toAbsolutePath();
-      }
+    parameters.oldJarPath = copyFromURI(parameters);
+    parameters.newJarPath = parameters.newJarPath.toAbsolutePath();
+    parameters.oldJarPath = parameters.oldJarPath.toAbsolutePath();
+    parameters.htmlReport = parameters.htmlReport.toAbsolutePath();
+    parameters.textReport = parameters.textReport.toAbsolutePath();
+    if (parameters.excludeList != null) {
+      parameters.excludeList = parameters.excludeList.toAbsolutePath();
+    }
 
-      final SemanticVersion newJarVersionValue =
-        semanticVersionOf(new Version(parameters.newJarVersion));
-      final SemanticVersion oldJarVersionValue =
-        semanticVersionOf(new Version(parameters.oldJarVersion));
+    final SemanticVersion newJarVersionValue =
+      semanticVersionOf(new Version(parameters.newJarVersion));
+    final SemanticVersion oldJarVersionValue =
+      semanticVersionOf(new Version(parameters.oldJarVersion));
 
-      if (hashOf(parameters.oldJarPath).equals(hashOf(parameters.newJarPath))) {
-        System.err.println(
-          "INFO: The input files are identical; any version number change is acceptable");
-        return 0;
-      }
-
-      final File oldTargetFile;
-      if (parameters.oldJarPath.toString().endsWith(".aar")) {
-        oldTargetFile = unpackAAR(parameters.oldJarPath);
-      } else {
-        oldTargetFile = parameters.oldJarPath.toFile();
-      }
-
-      final File newTargetFile;
-      if (parameters.newJarPath.toString().endsWith(".aar")) {
-        newTargetFile = unpackAAR(parameters.newJarPath);
-      } else {
-        newTargetFile = parameters.newJarPath.toFile();
-      }
-
-      final JApiCmpArchive oldArchives =
-        new JApiCmpArchive(
-          oldTargetFile,
-          oldJarVersionValue.toString()
-        );
-      final JApiCmpArchive newArchives =
-        new JApiCmpArchive(
-          newTargetFile,
-          newJarVersionValue.toString()
-        );
-
-      final Options options = Options.newDefault();
-      options.getIgnoreMissingClasses().setIgnoreAllMissingClasses(true);
-      options.setOutputOnlyModifications(true);
-      options.setNoAnnotations(true);
-      options.setOldArchives(Collections.singletonList(oldArchives));
-      options.setHtmlOutputFile(Optional.of(parameters.htmlReport.toString()));
-      options.setNewArchives(Collections.singletonList(newArchives));
-
-      if (parameters.excludeList != null) {
-        loadExcludeList(parameters, options);
-      }
-
-      final JarArchiveComparatorOptions comparatorOptions =
-        JarArchiveComparatorOptions.of(options);
-      final JarArchiveComparator jarArchiveComparator =
-        new JarArchiveComparator(comparatorOptions);
-      final List<JApiClass> jApiClasses =
-        jarArchiveComparator.compare(oldArchives, newArchives);
-
-      writeReports(options, jApiClasses, parameters, oldArchives, newArchives);
-
-      return runSemanticVersionCheck(
-        jApiClasses,
-        newJarVersionValue,
-        oldJarVersionValue
-      );
-    } catch (final FinishedEarly e) {
+    if (hashOf(parameters.oldJarPath).equals(hashOf(parameters.newJarPath))) {
+      System.err.println(
+        "INFO: The input files are identical; any version number change is acceptable");
       return 0;
     }
+
+    final File oldTargetFile;
+    if (parameters.oldJarPath.toString().endsWith(".aar")) {
+      oldTargetFile = unpackAAR(parameters.oldJarPath);
+    } else {
+      oldTargetFile = parameters.oldJarPath.toFile();
+    }
+
+    final File newTargetFile;
+    if (parameters.newJarPath.toString().endsWith(".aar")) {
+      newTargetFile = unpackAAR(parameters.newJarPath);
+    } else {
+      newTargetFile = parameters.newJarPath.toFile();
+    }
+
+    final JApiCmpArchive oldArchives =
+      new JApiCmpArchive(
+        oldTargetFile,
+        oldJarVersionValue.toString()
+      );
+    final JApiCmpArchive newArchives =
+      new JApiCmpArchive(
+        newTargetFile,
+        newJarVersionValue.toString()
+      );
+
+    final Options options = Options.newDefault();
+    options.getIgnoreMissingClasses().setIgnoreAllMissingClasses(true);
+    options.setOutputOnlyModifications(true);
+    options.setNoAnnotations(true);
+    options.setOldArchives(Collections.singletonList(oldArchives));
+    options.setHtmlOutputFile(Optional.of(parameters.htmlReport.toString()));
+    options.setNewArchives(Collections.singletonList(newArchives));
+
+    if (parameters.excludeList != null) {
+      loadExcludeList(parameters, options);
+    }
+
+    final JarArchiveComparatorOptions comparatorOptions =
+      JarArchiveComparatorOptions.of(options);
+    final JarArchiveComparator jarArchiveComparator =
+      new JarArchiveComparator(comparatorOptions);
+    final List<JApiClass> jApiClasses =
+      jarArchiveComparator.compare(oldArchives, newArchives);
+
+    writeReports(options, jApiClasses, parameters, oldArchives, newArchives);
+
+    return runSemanticVersionCheck(
+      jApiClasses,
+      newJarVersionValue,
+      oldJarVersionValue
+    );
   }
 
   private static Path copyFromURI(
     final Parameters parameters)
-    throws IOException, URISyntaxException, FinishedEarly
+    throws IOException, URISyntaxException
   {
     final URI source = parameters.oldJarUri;
     System.err.printf("INFO: Copying %s to temporary file%n", source);
@@ -309,7 +297,9 @@ public final class Main
           "INFO: Ignoring missing source %s (%s), and succeeding trivially.%n",
           source,
           e);
-        throw new FinishedEarly();
+        parameters.oldJarPath = parameters.newJarPath;
+        parameters.oldJarVersion = parameters.newJarVersion;
+        return parameters.newJarPath;
       }
       throw e;
     }
