@@ -84,7 +84,7 @@ public final class MainTest
 
     assertThrows(IOException.class, () -> {
       Main.mainExitless(new String[]{
-        "--oldJar",
+        "--oldJarUri",
         oldJar.toString(),
         "--oldJarVersion",
         "7.1.0",
@@ -111,7 +111,7 @@ public final class MainTest
 
     assertThrows(IOException.class, () -> {
       Main.mainExitless(new String[]{
-        "--oldJar",
+        "--oldJarUri",
         oldJar.toString(),
         "--oldJarVersion",
         "7.1.0",
@@ -128,6 +128,51 @@ public final class MainTest
   }
 
   @Test
+  public void nonexistentJarsFail2()
+    throws Exception
+  {
+    final IOException ex = assertThrows(IOException.class, () -> {
+      Main.mainExitless(new String[]{
+        "--oldJarUri",
+        "https://repo1.maven.org/maven2/com/io7m/jtensors/com.io7m.jtensors.core/nonexistent/com.io7m.jtensors.core-9.0.0.jar",
+        "--oldJarVersion",
+        "7.1.0",
+        "--newJar",
+        "https://repo1.maven.org/maven2/com/io7m/jtensors/com.io7m.jtensors.core/9.0.0/com.io7m.jtensors.core-9.0.0.jar",
+        "--newJarVersion",
+        "9.0.0",
+        "--textReport",
+        this.directory.resolve("report.txt").toString(),
+        "--htmlReport",
+        this.directory.resolve("report.html").toString(),
+      });
+    });
+
+    ex.printStackTrace();
+  }
+
+  @Test
+  public void nonexistentJarsIgnored()
+    throws Exception
+  {
+    Main.mainExitless(new String[]{
+      "--ignoreMissingOld",
+      "--oldJarUri",
+      "https://repo1.maven.org/maven2/com/io7m/jtensors/com.io7m.jtensors.core/nonexistent/com.io7m.jtensors.core-9.0.0.jar",
+      "--oldJarVersion",
+      "7.1.0",
+      "--newJar",
+      "https://repo1.maven.org/maven2/com/io7m/jtensors/com.io7m.jtensors.core/9.0.0/com.io7m.jtensors.core-9.0.0.jar",
+      "--newJarVersion",
+      "9.0.0",
+      "--textReport",
+      this.directory.resolve("report.txt").toString(),
+      "--htmlReport",
+      this.directory.resolve("report.html").toString(),
+    });
+  }
+
+  @Test
   public void unparseableVersion()
     throws Exception
   {
@@ -138,7 +183,7 @@ public final class MainTest
 
     assertThrows(IllegalArgumentException.class, () -> {
       Main.mainExitless(new String[]{
-        "--oldJar",
+        "--oldJarUri",
         oldJar.toString(),
         "--oldJarVersion",
         "x",
@@ -164,7 +209,7 @@ public final class MainTest
       this.resourceOf("io7m-jtensors-core-7.1.0.jar");
 
     final int result = Main.mainExitless(new String[]{
-      "--oldJar",
+      "--oldJarUri",
       oldJar.toString(),
       "--oldJarVersion",
       "7.1.0",
@@ -202,7 +247,7 @@ public final class MainTest
     }
 
     final int result = Main.mainExitless(new String[]{
-      "--oldJar",
+      "--oldJarUri",
       oldJar.toString(),
       "--oldJarVersion",
       "7.1.0",
@@ -231,7 +276,7 @@ public final class MainTest
       this.resourceOf("com.io7m.jtensors.core-8.0.0.jar");
 
     final int result = Main.mainExitless(new String[]{
-      "--oldJar",
+      "--oldJarUri",
       oldJar.toString(),
       "--oldJarVersion",
       "7.1.0",
@@ -258,7 +303,7 @@ public final class MainTest
       this.resourceOf("com.io7m.jtensors.core-8.0.0.jar");
 
     final int result = Main.mainExitless(new String[]{
-      "--oldJar",
+      "--oldJarUri",
       oldJar.toString(),
       "--oldJarVersion",
       "7.1.0",
@@ -285,7 +330,7 @@ public final class MainTest
       this.resourceOf("com.io7m.jtensors.core-8.0.0.aar");
 
     final int result = Main.mainExitless(new String[]{
-      "--oldJar",
+      "--oldJarUri",
       oldJar.toString(),
       "--oldJarVersion",
       "7.1.0",
@@ -312,7 +357,7 @@ public final class MainTest
       this.resourceOf("com.io7m.jtensors.core-8.0.0.aar");
 
     final int result = Main.mainExitless(new String[]{
-      "--oldJar",
+      "--oldJarUri",
       oldJar.toString(),
       "--oldJarVersion",
       "7.1.0",

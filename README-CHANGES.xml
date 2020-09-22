@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <c:changelog project="com.io7m.scando" xmlns:c="urn:com.io7m.changelog:4.0">
   <c:releases>
-    <c:release date="2020-06-26T21:21:08+00:00" ticket-system="com.github.io7m.scando" version="0.0.4">
+    <c:release date="2020-06-26T00:00:00+00:00" ticket-system="com.github.io7m.scando" version="0.0.4">
       <c:changes>
-        <c:change date="2020-06-26T21:21:08+00:00" summary="Add support for Android aar files">
+        <c:change date="2020-06-26T00:00:00+00:00" summary="Add support for Android aar files">
           <c:tickets>
             <c:ticket id="1"/>
           </c:tickets>
         </c:change>
+      </c:changes>
+    </c:release>
+    <c:release date="2020-09-22T14:12:21+00:00" ticket-system="com.github.io7m.scando" version="0.0.5">
+      <c:changes>
+        <c:change compatible="false" date="2020-09-22T14:12:21+00:00" summary="Add support for downloading jar/aar files."/>
       </c:changes>
     </c:release>
   </c:releases>
