@@ -15,8 +15,8 @@ Usage: scando [options]
       The new jar file
   * --newJarVersion
       The new jar version
-  * --oldJar
-      The old jar file
+  * --oldJarUri
+      The old jar/aar file/URI
   * --oldJarVersion
       The old jar version
   * --textReport
@@ -24,7 +24,7 @@ Usage: scando [options]
 
 $ java -jar \
   com.io7m.scando.cmdline-0.0.1-main.jar \
-  --oldJar io7m-jtensors-core-7.1.0.jar \
+  --oldJarUri https://repo1.maven.org/maven2/com/io7m/jtensors/io7m-jtensors-core/7.1.0/io7m-jtensors-core-7.1.0.jar \
   --newJar com.io7m.jtensors.core-9.0.0.jar \
   --oldJarVersion 7.1.0 \
   --newJarVersion 7.2.0 \
