@@ -11,12 +11,15 @@ Usage: scando [options]
       Display this help message
   * --htmlReport
       The output file for the HTML report
+    --ignoreMissingOld
+      Trivially succeed if the old jar is missing.
+      Default: false
   * --newJar
       The new jar file
   * --newJarVersion
       The new jar version
-  * --oldJar
-      The old jar file
+  * --oldJarUri
+      The old jar/aar file/URI
   * --oldJarVersion
       The old jar version
   * --textReport
@@ -24,7 +27,7 @@ Usage: scando [options]
 
 $ java -jar \
   com.io7m.scando.cmdline-0.0.1-main.jar \
-  --oldJar io7m-jtensors-core-7.1.0.jar \
+  --oldJarUri https://repo1.maven.org/maven2/com/io7m/jtensors/io7m-jtensors-core/7.1.0/io7m-jtensors-core-7.1.0.jar \
   --newJar com.io7m.jtensors.core-9.0.0.jar \
   --oldJarVersion 7.1.0 \
   --newJarVersion 7.2.0 \
@@ -41,5 +44,9 @@ $ echo $?
     The <tt>--excludeList</tt> parameter, if specified, gives the path of a file containing one exclude
     pattern per line. Empty lines, and lines starting with <tt>#</tt> are ignored.
     See <a href="https://siom79.github.io/japicmp/CliTool.html">japicmp</a> for the syntax of exclude patterns.
+  </p>
+  <p>
+    The <tt>--ignoreMissingOld</tt> parameter, if specified, allows for ignoring a missing "old" jar. This
+    is useful when, for example, a new module is added to a project.
   </p>
 </div>

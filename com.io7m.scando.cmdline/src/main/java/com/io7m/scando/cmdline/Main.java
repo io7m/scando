@@ -33,11 +33,17 @@ import japicmp.versioning.SemanticVersion;
 import japicmp.versioning.Version;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,6 +58,9 @@ import java.util.zip.ZipFile;
 
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class Main
 {
@@ -75,11 +84,11 @@ public final class Main
     private boolean help;
 
     @Parameter(
-      names = "--oldJar",
-      description = "The old jar/aar file",
+      names = "--oldJarUri",
+      description = "The old jar/aar file/URI",
       required = true
     )
-    private Path oldJarPath;
+    private URI oldJarUri;
 
     @Parameter(
       names = "--oldJarVersion",
@@ -122,6 +131,15 @@ public final class Main
       required = false
     )
     private Path excludeList;
+
+    @Parameter(
+      names = "--ignoreMissingOld",
+      description = "Trivially succeed if the old jar is missing.",
+      required = false
+    )
+    private boolean ignoreMissingOld;
+
+    private Path oldJarPath;
   }
 
   private static SemanticVersion semanticVersionOf(
@@ -162,6 +180,14 @@ public final class Main
       return 1;
     }
 
+    return runCheck(parameters);
+  }
+
+  private static int runCheck(
+    final Parameters parameters)
+    throws Exception
+  {
+    parameters.oldJarPath = copyFromURI(parameters);
     parameters.newJarPath = parameters.newJarPath.toAbsolutePath();
     parameters.oldJarPath = parameters.oldJarPath.toAbsolutePath();
     parameters.htmlReport = parameters.htmlReport.toAbsolutePath();
@@ -176,7 +202,8 @@ public final class Main
       semanticVersionOf(new Version(parameters.oldJarVersion));
 
     if (hashOf(parameters.oldJarPath).equals(hashOf(parameters.newJarPath))) {
-      System.err.println("INFO: The input files are identical; any version number change is acceptable");
+      System.err.println(
+        "INFO: The input files are identical; any version number change is acceptable");
       return 0;
     }
 
@@ -231,6 +258,51 @@ public final class Main
       newJarVersionValue,
       oldJarVersionValue
     );
+  }
+
+  private static Path copyFromURI(
+    final Parameters parameters)
+    throws IOException, URISyntaxException
+  {
+    final URI source = parameters.oldJarUri;
+    System.err.printf("INFO: Copying %s to temporary file%n", source);
+
+    final URI actualSource;
+    if (source.getScheme() == null) {
+      actualSource = new URI("file", null, source.getPath(), null);
+    } else {
+      actualSource = source;
+    }
+
+    final String extension =
+      FilenameUtils.getExtension(actualSource.getPath());
+    final URL sourceUrl =
+      actualSource.toURL();
+
+    try {
+      try (InputStream inputStream = sourceUrl.openStream()) {
+        final Path output = Files.createTempFile("scando", extension);
+        try (OutputStream outputStream = Files.newOutputStream(
+          output,
+          CREATE,
+          TRUNCATE_EXISTING,
+          WRITE)) {
+          IOUtils.copy(inputStream, outputStream);
+          return output;
+        }
+      }
+    } catch (final FileNotFoundException e) {
+      if (parameters.ignoreMissingOld) {
+        System.err.printf(
+          "INFO: Ignoring missing source %s (%s), and succeeding trivially.%n",
+          source,
+          e);
+        parameters.oldJarPath = parameters.newJarPath;
+        parameters.oldJarVersion = parameters.newJarVersion;
+        return parameters.newJarPath;
+      }
+      throw e;
+    }
   }
 
   private static String hashOf(final Path path)
