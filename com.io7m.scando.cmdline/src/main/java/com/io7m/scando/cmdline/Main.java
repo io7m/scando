@@ -327,7 +327,7 @@ public final class Main
   private static URI convertFileOrURI(final String source) {
     try {
       return URI.create(source);
-    } catch (IllegalArgumentException e) {
+    } catch (final IllegalArgumentException e) {
       // Not a URI
     }
     return Paths.get(source).toUri();
