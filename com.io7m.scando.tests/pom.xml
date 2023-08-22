@@ -19,6 +19,8 @@
 
   <properties>
     <mdep.analyze.skip>true</mdep.analyze.skip>
+    <checkstyle.skip>true</checkstyle.skip>
+    <jacoco.skip>true</jacoco.skip>
   </properties>
 
   <dependencies>
@@ -45,15 +47,5 @@
       <artifactId>junit-jupiter-engine</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <!-- Determine test coverage -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>
