@@ -47,6 +47,7 @@ import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -96,7 +97,7 @@ public final class Main
       description = "The old jar/aar file/URI",
       required = true
     )
-    private URI oldJarUri;
+    private String oldJarUri;
 
     @Parameter(
       names = "--oldJarVersion",
@@ -282,7 +283,7 @@ public final class Main
     final Parameters parameters)
     throws IOException, URISyntaxException
   {
-    final URI source = parameters.oldJarUri;
+    final URI source = convertFileOrURI(parameters.oldJarUri);
     System.err.printf("INFO: Copying %s to temporary file%n", source);
 
     final URI actualSource;
@@ -321,6 +322,15 @@ public final class Main
       }
       throw e;
     }
+  }
+
+  private static URI convertFileOrURI(final String source) {
+    try {
+      return URI.create(source);
+    } catch (IllegalArgumentException e) {
+      // Not a URI
+    }
+    return Paths.get(source).toUri();
   }
 
   private static String hashOf(final Path path)
