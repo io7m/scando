@@ -47,6 +47,7 @@ import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -62,12 +63,20 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 
+/**
+ * The main command-line entry point.
+ */
+
 public final class Main
 {
   private Main()
   {
 
   }
+
+  /**
+   * The main parameters.
+   */
 
   public static final class Parameters
   {
@@ -88,7 +97,7 @@ public final class Main
       description = "The old jar/aar file/URI",
       required = true
     )
-    private URI oldJarUri;
+    private String oldJarUri;
 
     @Parameter(
       names = "--oldJarVersion",
@@ -154,6 +163,16 @@ public final class Main
       version)
     );
   }
+
+  /**
+   * The main exitless entry point. Raises exceptions on errors.
+   *
+   * @param args The command-line arguments
+   *
+   * @return The program exit code
+   *
+   * @throws Exception On errors
+   */
 
   public static int mainExitless(
     final String[] args)
@@ -264,7 +283,7 @@ public final class Main
     final Parameters parameters)
     throws IOException, URISyntaxException
   {
-    final URI source = parameters.oldJarUri;
+    final URI source = convertFileOrURI(parameters.oldJarUri);
     System.err.printf("INFO: Copying %s to temporary file%n", source);
 
     final URI actualSource;
@@ -305,6 +324,15 @@ public final class Main
     }
   }
 
+  private static URI convertFileOrURI(final String source) {
+    try {
+      return URI.create(source);
+    } catch (final IllegalArgumentException e) {
+      // Not a URI
+    }
+    return Paths.get(source).toUri();
+  }
+
   private static String hashOf(final Path path)
     throws IOException, NoSuchAlgorithmException
   {
@@ -321,6 +349,14 @@ public final class Main
     }
     return Hex.encodeHexString(digest.digest());
   }
+
+  /**
+   * The main entry point. Exits the process instead of returning.
+   *
+   * @param args The command-line arguments
+   *
+   * @throws Exception On errors
+   */
 
   public static void main(
     final String[] args)

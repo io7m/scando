@@ -9,7 +9,7 @@
   <parent>
     <groupId>com.io7m.scando</groupId>
     <artifactId>com.io7m.scando</artifactId>
-    <version>0.0.5</version>
+    <version>1.0.0</version>
   </parent>
 
   <artifactId>com.io7m.scando.cmdline</artifactId>
@@ -64,9 +64,15 @@
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
+                    <exclude>**/module-info.class</exclude>
                     <exclude>META-INF/*.RSA</exclude>
                     <exclude>META-INF/*.SF</exclude>
-                    <exclude>**/module-info.class</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/LICENSE.md</exclude>
+                    <exclude>META-INF/LICENSE.txt</exclude>
+                    <exclude>META-INF/NOTICE.md</exclude>
+                    <exclude>META-INF/NOTICE.txt</exclude>
+                    <exclude>META-INF/maven/**</exclude>
                   </excludes>
                 </filter>
               </filters>
